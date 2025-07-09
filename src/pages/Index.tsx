@@ -1,12 +1,64 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Header from "@/components/layout/Header";
+import StatsGrid from "@/components/dashboard/StatsGrid";
+import DocumentUpload from "@/components/upload/DocumentUpload";
+import ProcessingChart from "@/components/dashboard/ProcessingChart";
+import AIProviderStatus from "@/components/dashboard/AIProviderStatus";
+import TemplateManager from "@/components/templates/TemplateManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Dashboard - Sistema de Extração RH
+          </h1>
+          <p className="text-gray-600">
+            Processamento inteligente de documentos com IA para otimizar processos de RH
+          </p>
+        </div>
+
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="upload">Upload</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="ai-config">Config IA</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            <StatsGrid />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <ProcessingChart />
+              <AIProviderStatus />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="upload" className="space-y-6">
+            <DocumentUpload />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6">
+            <TemplateManager />
+          </TabsContent>
+
+          <TabsContent value="ai-config" className="space-y-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Configuração de IA
+              </h3>
+              <p className="text-gray-600">
+                Funcionalidade em desenvolvimento - configure suas APIs de IA aqui
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };
