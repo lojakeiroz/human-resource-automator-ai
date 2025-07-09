@@ -1,10 +1,14 @@
 
 import { useState, useCallback } from "react";
-import { Upload, FileText, Image, Volume2, X } from "lucide-react";
+import { Upload, FileText, Image, Volume2, X, Bot } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTemplates } from "@/hooks/useTemplates";
+import useAIProcessing from "@/hooks/useAIProcessing";
+import FormPreview from "@/components/forms/FormPreview";
 
 interface UploadedFile {
   id: string;
@@ -13,12 +17,19 @@ interface UploadedFile {
   type: string;
   status: 'uploading' | 'processing' | 'completed' | 'error';
   progress: number;
+  extractedData?: Record<string, any>;
+  file: File;
 }
 
 const DocumentUpload = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [extractedData, setExtractedData] = useState<Record<string, any> | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const { templates } = useTemplates();
+  const { extractDataFromFile, fillTemplate, isProcessing } = useAIProcessing();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -30,7 +41,7 @@ const DocumentUpload = () => {
     setIsDragging(false);
   }, []);
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     const fileId = Date.now().toString();
     const uploadedFile: UploadedFile = {
       id: fileId,
@@ -39,6 +50,7 @@ const DocumentUpload = () => {
       type: file.type,
       status: 'uploading',
       progress: 0,
+      file,
     };
 
     setFiles(prev => [...prev, uploadedFile]);
@@ -47,38 +59,43 @@ const DocumentUpload = () => {
     const uploadInterval = setInterval(() => {
       setFiles(prev => prev.map(f => {
         if (f.id === fileId && f.status === 'uploading') {
-          const newProgress = f.progress + 10;
+          const newProgress = f.progress + 20;
           if (newProgress >= 100) {
             clearInterval(uploadInterval);
-            // Simular processamento
-            setTimeout(() => {
-              setFiles(prev => prev.map(file => 
-                file.id === fileId 
-                  ? { ...file, status: 'processing', progress: 0 }
-                  : file
-              ));
-              
-              // Simular conclusão do processamento
-              setTimeout(() => {
-                setFiles(prev => prev.map(file => 
-                  file.id === fileId 
-                    ? { ...file, status: 'completed', progress: 100 }
-                    : file
-                ));
-                toast({
-                  title: "Documento processado",
-                  description: `${file.name} foi processado com sucesso!`,
-                });
-              }, 3000);
-            }, 1000);
-            
-            return { ...f, status: 'uploading', progress: 100 };
+            processWithAI(fileId, file);
+            return { ...f, status: 'processing', progress: 0 };
           }
           return { ...f, progress: newProgress };
         }
         return f;
       }));
-    }, 200);
+    }, 300);
+  };
+
+  const processWithAI = async (fileId: string, file: File) => {
+    try {
+      const result = await extractDataFromFile(file);
+      
+      setFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { ...f, status: 'completed', progress: 100, extractedData: result.data }
+          : f
+      ));
+
+      if (result.success) {
+        setExtractedData(result.data);
+        toast({
+          title: "Dados extraídos com sucesso",
+          description: `${Object.keys(result.data).length} campos identificados com ${(result.confidence * 100).toFixed(1)}% de confiança`,
+        });
+      }
+    } catch (error) {
+      setFiles(prev => prev.map(f => 
+        f.id === fileId 
+          ? { ...f, status: 'error', progress: 0 }
+          : f
+      ));
+    }
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -97,6 +114,24 @@ const DocumentUpload = () => {
 
   const removeFile = (fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  const generateForm = () => {
+    if (!selectedTemplate || !extractedData) {
+      toast({
+        title: "Dados insuficientes",
+        description: "Selecione um template e processe um documento primeiro.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (template) {
+      const filledData = fillTemplate(template.fields, extractedData);
+      setExtractedData({ ...extractedData, ...filledData });
+      setShowForm(true);
+    }
   };
 
   const getFileIcon = (type: string) => {
@@ -125,6 +160,40 @@ const DocumentUpload = () => {
 
   return (
     <div className="space-y-6">
+      {/* Template Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Bot className="h-5 w-5" />
+            <span>Seleção de Template</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o template para preenchimento automático" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(template => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name} - {template.category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              onClick={generateForm}
+              disabled={!selectedTemplate || !extractedData || isProcessing}
+            >
+              Gerar Formulário
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Upload Area */}
       <Card>
         <CardHeader>
@@ -207,11 +276,16 @@ const DocumentUpload = () => {
                         </div>
                         <Badge className={getStatusColor(file.status)}>
                           {file.status === 'uploading' && 'Enviando'}
-                          {file.status === 'processing' && 'Processando'}
+                          {file.status === 'processing' && 'Processando IA'}
                           {file.status === 'completed' && 'Concluído'}
                           {file.status === 'error' && 'Erro'}
                         </Badge>
                       </div>
+                      {file.extractedData && (
+                        <div className="mt-2 text-xs text-green-600">
+                          ✓ {Object.keys(file.extractedData).length} campos extraídos pela IA
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -219,6 +293,21 @@ const DocumentUpload = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Form Preview */}
+      {showForm && selectedTemplate && extractedData && (
+        <FormPreview
+          template={templates.find(t => t.id === selectedTemplate)!}
+          extractedData={extractedData}
+          onSave={(data) => {
+            console.log('Formulário salvo:', data);
+            toast({
+              title: "Formulário salvo",
+              description: "Dados salvos com sucesso!"
+            });
+          }}
+        />
       )}
     </div>
   );

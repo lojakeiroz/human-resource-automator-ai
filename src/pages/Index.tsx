@@ -5,6 +5,7 @@ import DocumentUpload from "@/components/upload/DocumentUpload";
 import ProcessingChart from "@/components/dashboard/ProcessingChart";
 import AIProviderStatus from "@/components/dashboard/AIProviderStatus";
 import TemplateManager from "@/components/templates/TemplateManager";
+import AIConfigPanel from "@/components/ai/AIConfigPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -48,14 +49,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="ai-config" className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Configuração de IA
-              </h3>
-              <p className="text-gray-600">
-                Funcionalidade em desenvolvimento - configure suas APIs de IA aqui
-              </p>
-            </div>
+            <AIConfigPanel />
           </TabsContent>
         </Tabs>
       </main>
