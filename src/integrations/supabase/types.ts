@@ -14,7 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_configs: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          model_name: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_name?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_name?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      filled_forms: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          form_data: Json
+          id: string
+          template_category: string | null
+          template_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          form_data: Json
+          id?: string
+          template_category?: string | null
+          template_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          form_data?: Json
+          id?: string
+          template_category?: string | null
+          template_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filled_forms_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "processed_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processed_documents: {
+        Row: {
+          ai_provider: string | null
+          confidence_score: number | null
+          created_at: string
+          extracted_data: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string | null
+          id: string
+          processing_status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_provider?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          extracted_data?: Json | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url?: string | null
+          id?: string
+          processing_status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_provider?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          extracted_data?: Json | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          processing_status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

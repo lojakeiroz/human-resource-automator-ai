@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTemplates } from "@/hooks/useTemplates";
 import useAIProcessing from "@/hooks/useAIProcessing";
 import FormPreview from "@/components/forms/FormPreview";
+import { documentStorageService } from "@/services/documentStorageService";
 
 interface UploadedFile {
   id: string;
@@ -19,6 +20,7 @@ interface UploadedFile {
   progress: number;
   extractedData?: Record<string, any>;
   file: File;
+  documentId?: string;
 }
 
 const DocumentUpload = () => {
@@ -78,16 +80,18 @@ const DocumentUpload = () => {
       
       setFiles(prev => prev.map(f => 
         f.id === fileId 
-          ? { ...f, status: 'completed', progress: 100, extractedData: result.data }
+          ? { 
+              ...f, 
+              status: result.success ? 'completed' : 'error', 
+              progress: 100, 
+              extractedData: result.data,
+              documentId: result.documentId
+            }
           : f
       ));
 
       if (result.success) {
         setExtractedData(result.data);
-        toast({
-          title: "Dados extraídos com sucesso",
-          description: `${Object.keys(result.data).length} campos identificados com ${(result.confidence * 100).toFixed(1)}% de confiança`,
-        });
       }
     } catch (error) {
       setFiles(prev => prev.map(f => 
@@ -300,12 +304,29 @@ const DocumentUpload = () => {
         <FormPreview
           template={templates.find(t => t.id === selectedTemplate)!}
           extractedData={extractedData}
-          onSave={(data) => {
-            console.log('Formulário salvo:', data);
-            toast({
-              title: "Formulário salvo",
-              description: "Dados salvos com sucesso!"
-            });
+          onSave={async (data) => {
+            try {
+              const template = templates.find(t => t.id === selectedTemplate)!;
+              const processedFile = files.find(f => f.status === 'completed');
+              
+              await documentStorageService.saveFilledForm(
+                template.name,
+                template.category,
+                data,
+                processedFile?.documentId
+              );
+              
+              toast({
+                title: "Formulário salvo",
+                description: "Dados salvos com sucesso no banco de dados!"
+              });
+            } catch (error) {
+              toast({
+                title: "Erro ao salvar",
+                description: error instanceof Error ? error.message : "Erro desconhecido",
+                variant: "destructive"
+              });
+            }
           }}
         />
       )}
