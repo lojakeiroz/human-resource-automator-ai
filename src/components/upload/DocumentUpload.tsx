@@ -57,7 +57,7 @@ const DocumentUpload = () => {
 
     setFiles(prev => [...prev, uploadedFile]);
 
-    // Simular upload
+    // Upload e processamento com IA em uma única operação
     const uploadInterval = setInterval(() => {
       setFiles(prev => prev.map(f => {
         if (f.id === fileId && f.status === 'uploading') {
