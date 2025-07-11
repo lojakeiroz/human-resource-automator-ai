@@ -232,11 +232,13 @@ const DocumentUpload = () => {
               className="hidden"
               id="file-upload"
             />
-            <label htmlFor="file-upload">
-              <Button variant="outline" className="cursor-pointer">
-                Selecionar Arquivos
-              </Button>
-            </label>
+            <Button 
+              variant="outline" 
+              className="cursor-pointer"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              Selecionar Arquivos
+            </Button>
           </div>
         </CardContent>
       </Card>
