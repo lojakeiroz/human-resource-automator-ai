@@ -1,5 +1,5 @@
 
-import { Brain, Settings, User, Bell } from "lucide-react";
+import { Brain, Settings, User, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -8,8 +8,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Erro ao fazer logout');
+    } else {
+      toast.success('Logout realizado com sucesso!');
+    }
+  };
+
   return (
     <header className="border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,11 +60,15 @@ const Header = () => {
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Perfil</span>
+                  <span>{user?.email}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Configurações</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

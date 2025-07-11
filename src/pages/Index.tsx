@@ -6,9 +6,25 @@ import ProcessingChart from "@/components/dashboard/ProcessingChart";
 import AIProviderStatus from "@/components/dashboard/AIProviderStatus";
 import TemplateManager from "@/components/templates/TemplateManager";
 import AIConfigPanel from "@/components/ai/AIConfigPanel";
+import AuthModal from "@/components/auth/AuthModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthModal />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
