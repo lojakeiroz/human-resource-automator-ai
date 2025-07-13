@@ -81,7 +81,7 @@ class DocumentStorageService {
 
   async updateDocumentProcessing(
     documentId: string,
-    status: 'processing' | 'completed' | 'error',
+    status: 'processing' | 'completed' | 'failed',
     extractedData?: ExtractedData,
     confidence?: number,
     provider?: string,

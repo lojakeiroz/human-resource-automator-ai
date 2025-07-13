@@ -45,7 +45,7 @@ const useAIProcessing = () => {
         });
       } else {
         // 6. Marcar como erro se falhou
-        await documentStorageService.updateDocumentProcessing(documentId, 'error');
+        await documentStorageService.updateDocumentProcessing(documentId, 'failed');
         
         throw new Error(result.error || 'Erro no processamento');
       }
@@ -54,7 +54,7 @@ const useAIProcessing = () => {
 
     } catch (error) {
       if (documentId) {
-        await documentStorageService.updateDocumentProcessing(documentId, 'error');
+        await documentStorageService.updateDocumentProcessing(documentId, 'failed');
       }
 
       toast({
