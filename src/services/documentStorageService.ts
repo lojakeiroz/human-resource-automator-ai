@@ -88,8 +88,7 @@ class DocumentStorageService {
     templateId?: string
   ): Promise<void> {
     const updates: any = {
-      processing_status: status,
-      updated_at: new Date().toISOString()
+      processing_status: status
     };
 
     if (extractedData) updates.extracted_data = extractedData;
