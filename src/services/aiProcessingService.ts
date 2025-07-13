@@ -165,58 +165,30 @@ class AIProcessingService {
 
   async processDocument(file: File): Promise<ProcessingResult> {
     try {
-      const configs = await this.getActiveAIConfigs();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (configs.length === 0) {
-        throw new Error('Nenhuma configuração de IA ativa encontrada');
+      if (!session) {
+        throw new Error('Usuário não autenticado');
       }
 
-      let allExtractedData: ExtractedData = {};
-      let highestConfidence = 0;
-      let usedProviders: string[] = [];
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Processar com Google Vision se disponível
-      const googleConfig = configs.find(config => config.provider === 'google-vision');
-      if (googleConfig) {
-        try {
-          const visionData = await this.processWithGoogleVision(googleConfig.api_key, file);
-          allExtractedData = { ...allExtractedData, ...visionData };
-          highestConfidence = Math.max(highestConfidence, 0.85);
-          usedProviders.push('Google Vision');
-        } catch (error) {
-          console.error('Erro no Google Vision:', error);
-        }
+      const response = await fetch(`https://dxaydlaunddpwccskaii.supabase.co/functions/v1/process-document`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro no processamento');
       }
 
-      // Processar com OpenAI se disponível
-      const openaiConfig = configs.find(config => config.provider === 'openai');
-      if (openaiConfig && Object.keys(allExtractedData).length > 0) {
-        try {
-          // Usar o texto extraído pelo OCR para análise com OpenAI
-          const textForAnalysis = Object.values(allExtractedData).join(' ');
-          const aiData = await this.processWithOpenAI(
-            openaiConfig.api_key, 
-            openaiConfig.model_name || 'gpt-4o-mini', 
-            textForAnalysis
-          );
-          allExtractedData = { ...allExtractedData, ...aiData };
-          highestConfidence = Math.max(highestConfidence, 0.90);
-          usedProviders.push('OpenAI');
-        } catch (error) {
-          console.error('Erro no OpenAI:', error);
-        }
-      }
-
-      if (Object.keys(allExtractedData).length === 0) {
-        throw new Error('Nenhum dado foi extraído do documento');
-      }
-
-      return {
-        success: true,
-        data: allExtractedData,
-        confidence: highestConfidence,
-        provider: usedProviders.join(' + ')
-      };
+      const result = await response.json();
+      return result;
 
     } catch (error) {
       return {

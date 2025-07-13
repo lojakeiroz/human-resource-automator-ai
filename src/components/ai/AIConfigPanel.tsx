@@ -161,12 +161,13 @@ const AIConfigPanel = () => {
       // Salvar cada configuração no Supabase
       for (const provider of providers) {
         if (provider.apiKey) {
-          await aiConfigService.saveConfig({
+          const saved = await aiConfigService.saveConfig({
             provider: provider.provider,
             api_key: provider.apiKey,
             model_name: provider.model,
             is_active: provider.enabled
           });
+          console.log(`Configuração salva para ${provider.provider}:`, saved);
         }
       }
 
