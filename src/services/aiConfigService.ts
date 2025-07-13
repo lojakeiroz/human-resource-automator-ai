@@ -24,6 +24,8 @@ class AIConfigService {
         api_key: config.api_key,
         model_name: config.model_name,
         is_active: config.is_active
+      }, {
+        onConflict: 'user_id,provider'
       })
       .select('id')
       .single();
