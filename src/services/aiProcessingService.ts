@@ -183,8 +183,20 @@ class AIProcessingService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro no processamento');
+        let errorMessage = 'Erro no processamento';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Se não conseguir parsear JSON, usar texto da resposta
+          errorMessage = await response.text() || errorMessage;
+        }
+        console.error('Erro na Edge Function:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          message: errorMessage 
+        });
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
