@@ -174,10 +174,22 @@ class AIProcessingService {
 
       if (error) {
         console.error('Erro na Edge Function:', error);
-        throw new Error(error.message);
+        return {
+          success: false,
+          data: {},
+          confidence: 0,
+          provider: '',
+          error: error.message || 'Erro desconhecido'
+        };
       }
 
-      return data;
+      return data || {
+        success: false,
+        data: {},
+        confidence: 0,
+        provider: '',
+        error: 'Nenhum dado retornado'
+      };
 
     } catch (error) {
       return {
