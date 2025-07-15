@@ -120,6 +120,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in process-document function:', error);
+    console.error('Error details:', { 
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+      stack: error instanceof Error ? error.stack : null
+    });
     
     const result: ProcessingResult = {
       success: false,
