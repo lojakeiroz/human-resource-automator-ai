@@ -165,42 +165,19 @@ class AIProcessingService {
 
   async processDocument(file: File): Promise<ProcessingResult> {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Usuário não autenticado');
-      }
-
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`https://dxaydlaunddpwccskaii.supabase.co/functions/v1/process-document`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+      const { data, error } = await supabase.functions.invoke('process-document', {
         body: formData,
       });
 
-      if (!response.ok) {
-        let errorMessage = 'Erro no processamento';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          // Se não conseguir parsear JSON, usar texto da resposta
-          errorMessage = await response.text() || errorMessage;
-        }
-        console.error('Erro na Edge Function:', { 
-          status: response.status, 
-          statusText: response.statusText,
-          message: errorMessage 
-        });
-        throw new Error(errorMessage);
+      if (error) {
+        console.error('Erro na Edge Function:', error);
+        throw new Error(error.message);
       }
 
-      const result = await response.json();
-      return result;
+      return data;
 
     } catch (error) {
       return {
